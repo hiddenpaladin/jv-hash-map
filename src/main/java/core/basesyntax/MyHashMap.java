@@ -9,7 +9,7 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
 
     private int size = 0;
     private int currentCapacity = 16;
-    public Node <K,V>[] table = new Node[DEFAULT_INITIAL_CAPACITY];
+    private Node<K,V>[] table = new Node[DEFAULT_INITIAL_CAPACITY];
 
     @Override
     public void put(K key, V value) {
@@ -23,19 +23,35 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
 
     @Override
     public V getValue(K key) {
-        int index = (key.hashCode() & 0x7fffffff) % table.length;
-        Node<K,V> currentNode = table[index];
-        if (currentNode == null) {
-            return null;
-        }
-        while (currentNode.key != key ) {
-            if (currentNode.next != null) {
-                currentNode = currentNode.next;
-            } else {
-                throw new RuntimeException("input key is invalid");
+        if (key == null) {
+            int index = 0;
+            Node<K,V> currentNode = table[index];
+            if (currentNode == null) {
+                return null;
             }
+            while (!Objects.equals(currentNode.key,key)) {
+                if (currentNode.next != null) {
+                    currentNode = currentNode.next;
+                } else {
+                    return null;
+                }
+            }
+            return currentNode.value;
+        } else {
+            int index = (key.hashCode() & 0x7fffffff) % table.length;
+            Node<K,V> currentNode = table[index];
+            if (currentNode == null) {
+                return null;
+            }
+            while (!Objects.equals(currentNode.key,key)) {
+                if (currentNode.next != null) {
+                    currentNode = currentNode.next;
+                } else {
+                    return null;
+                }
+            }
+            return currentNode.value;
         }
-        return currentNode.value;
     }
 
     @Override
@@ -44,23 +60,28 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
     }
 
     public void reSize() {
-        if ((int)(currentCapacity + currentCapacity * DEFAULT_LOAD_FACTOR) < MAXIMUM_CAPACITY) {
-            currentCapacity = (int)(currentCapacity + currentCapacity * DEFAULT_LOAD_FACTOR);
-            Node<K,V>[] newTable = new Node[(int)(currentCapacity + currentCapacity * DEFAULT_LOAD_FACTOR)];
+        if ((int)(currentCapacity * 2) < MAXIMUM_CAPACITY) {
+            currentCapacity = currentCapacity * 2;
+            size = 0;
+            Node<K,V>[] newTable = new Node[currentCapacity];
             for (Node<K,V> node : table) {
                 if (node != null) {
-                    putByIndex(newTable,node.key.hashCode(), node);
+                    Node<K,V> newNode = new Node<K,V>(node.key, node.value, node.hash);
+                    putByIndex(newTable,(node.key.hashCode() & 0x7fffffff)
+                            % currentCapacity, newNode);
                     while (node.next != null) {
                         node = node.next;
-                        putByIndex(newTable,node.key.hashCode(), node);
+                        newNode = new Node<K,V>(node.key, node.value, node.hash);
+                        putByIndex(newTable,(node.key.hashCode() & 0x7fffffff)
+                                % currentCapacity, newNode);
                     }
                 }
             }
             table = newTable;
-            }
         }
+    }
 
-    public void putByIndex (Node[] table,int index, Node<K,V> node) {
+    public void putByIndex(Node[] table,int index, Node<K,V> node) {
         if (Objects.equals(table[index],null)) {
             table[index] = node;
             size++;
@@ -69,7 +90,7 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
             Node<K,V> currentNode = table[index];
 
             while (currentNode.next != null) {
-                if (table[index].key.equals(node.key)) {
+                if (Objects.equals(table[index].key,node.key)) {
                     table[index].value = node.value;
                     keyAlreadyExists = true;
                     break;
@@ -84,7 +105,7 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
     }
 
     static class Node<K,V> {
-        int hash;
+        private int hash;
         private K key;
         private V value;
         private Node<K,V> next;
