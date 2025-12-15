@@ -89,15 +89,19 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
             boolean keyAlreadyExists = false;
             Node<K,V> currentNode = table[index];
 
-            while (currentNode.next != null) {
-                if (Objects.equals(table[index].key,node.key)) {
-                    table[index].value = node.value;
+            while (currentNode != null) {
+                if (Objects.equals(currentNode.key,node.key)) {
+                    currentNode.value = node.value;
                     keyAlreadyExists = true;
                     break;
                 }
                 currentNode = currentNode.next;
             }
             if (keyAlreadyExists == false) {
+                currentNode = table[index];
+                while (currentNode.next != null) {
+                    currentNode = currentNode.next;
+                }
                 currentNode.next = node;
                 size++;
             }
