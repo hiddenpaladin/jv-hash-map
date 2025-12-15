@@ -8,7 +8,7 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
     private int size = 0;
-    private int currentCapacity = 16;
+    private int currentCapacity = DEFAULT_INITIAL_CAPACITY;
     private Node<K,V>[] table = new Node[DEFAULT_INITIAL_CAPACITY];
 
     @Override
@@ -59,20 +59,20 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
         return size;
     }
 
-    public void reSize() {
-        if ((int)(currentCapacity * 2) < MAXIMUM_CAPACITY) {
+    private void reSize() {
+        if ((currentCapacity * 2) != MAXIMUM_CAPACITY) {
             currentCapacity = currentCapacity * 2;
             size = 0;
             Node<K,V>[] newTable = new Node[currentCapacity];
             for (Node<K,V> node : table) {
                 if (node != null) {
                     Node<K,V> newNode = new Node<K,V>(node.key, node.value, node.hash);
-                    putByIndex(newTable,(node.key.hashCode() & 0x7fffffff)
+                    putByIndex(newTable,(node.hash & 0x7fffffff)
                             % currentCapacity, newNode);
                     while (node.next != null) {
                         node = node.next;
                         newNode = new Node<K,V>(node.key, node.value, node.hash);
-                        putByIndex(newTable,(node.key.hashCode() & 0x7fffffff)
+                        putByIndex(newTable,(node.hash & 0x7fffffff)
                                 % currentCapacity, newNode);
                     }
                 }
@@ -81,7 +81,7 @@ public class MyHashMap<K,V> implements MyMap<K,V> {
         }
     }
 
-    public void putByIndex(Node[] table,int index, Node<K,V> node) {
+    private void putByIndex(Node[] table,int index, Node<K,V> node) {
         if (Objects.equals(table[index],null)) {
             table[index] = node;
             size++;
